@@ -25,8 +25,8 @@ def get_fibonacci_sequence(n: int) -> list[int]:
     return fib
 
 
-def get_sorted_dict_by_decimals(TODO):
-    pass
+def get_sorted_dict_by_decimals(d: dict[str, float]) -> dict[str, float]:
+    return dict(sorted(d.items(), key=lambda x: x[1] % 1))
 
 
 def fibonacci_numbers(length):
