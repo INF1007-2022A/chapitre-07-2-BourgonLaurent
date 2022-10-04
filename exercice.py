@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 from collections import deque
-from typing import Iterator
+from typing import Callable, Iterator, Sequence, TypeVar
+
+T = TypeVar("T")
 
 
 def get_fibonacci_number(i: int) -> int:
@@ -26,7 +28,7 @@ def get_fibonacci_sequence(n: int) -> list[int]:
     return fib
 
 
-def get_sorted_dict_by_decimals(d: dict[str, float]) -> dict[str, float]:
+def get_sorted_dict_by_decimals(d: dict[T, float]) -> dict[T, float]:
     return dict(sorted(d.items(), key=lambda x: x[1] % 1))
 
 
@@ -45,8 +47,25 @@ def fibonacci_numbers(n: int) -> Iterator[int]:
         yield current
 
 
-def build_recursive_sequence_generator(TODO):
-    pass
+def build_recursive_sequence_generator(
+    values: Sequence[T],
+    recursive: Callable[[Sequence[T]], T],
+    keep_sequence=False,
+) -> Callable[[int], Iterator[T]]:
+    def generator(n: int):
+        for value in values[0:n]:
+            yield value
+
+        fifo = deque(values)
+        for i in range(len(values), n):
+            current = recursive(fifo)
+            fifo.append(current)
+            if not keep_sequence:
+                fifo.popleft()
+
+            yield current
+
+    return generator
 
 
 if __name__ == "__main__":
@@ -69,17 +88,21 @@ if __name__ == "__main__":
         print(fibo_num, end=" ")
     print("\n")
 
-    # def fibo_def(last_elems):
-    #     return last_elems[-1] + last_elems[-2]
+    def fibo_def(last_elems: Sequence[int]) -> int:
+        return last_elems[-1] + last_elems[-2]
 
-    # fibo = build_recursive_sequence_generator([0, 1], fibo_def)
-    # for fi in fibo(10):
-    #     print(fi, end=" ")
-    # print("\n")
+    fibo = build_recursive_sequence_generator([0, 1], fibo_def)
+    for fi in fibo(10):
+        print(fi, end=" ")
+    print("\n")
 
-    # lucas = build_recursive_sequence_generator(TODO)
-    # print(f"Lucas : {[elem for elem in lucas(10)]}")
-    # perrin = build_recursive_sequence_generator(TODO)
-    # print(f"Perrin : {[elem for elem in perrin(10)]}")
-    # hofstadter_q = build_recursive_sequence_generator(TODO)
-    # print(f"Hofstadter-Q : {[elem for elem in hofstadter_q(10)]}")
+    lucas = build_recursive_sequence_generator([2, 1], fibo_def)
+    print(f"Lucas : {[elem for elem in lucas(10)]}")
+    perrin = build_recursive_sequence_generator([3, 0, 2], lambda x: x[-2] + x[-3])
+    print(f"Perrin : {[elem for elem in perrin(10)]}")
+    hofstadter_q = build_recursive_sequence_generator(
+        [1, 1],
+        lambda x: x[-x[-1]] + x[-x[-2]],
+        True,
+    )
+    print(f"Hofstadter-Q : {[elem for elem in hofstadter_q(10)]}")
